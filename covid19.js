@@ -84,23 +84,65 @@ function translate(data, start, end, markStop, outputName) {
   return translation;
 }
 
+
+function compare(genSeqOne, genSeqTwo) {
+  let genSeqOneLength = genSeqOne.length;
+  let genSeqTwoLength = genSeqTwo.length;
+  let diff = {
+    total: 0,
+    mismatch: []
+  }
+
+  if(genSeqOneLength !== genSeqTwoLength) return console.log("Length mismatch.");
+
+  for(var i = 0; i < genSeqOneLength; i++) {
+    if(genSeqOne[i] !== genSeqTwo[i]) {
+      diff.total++;
+      diff.mismatch.push({position: i, seqOne: genSeqOne[i], seqTwo: genSeqTwo[i]})
+    }
+  }
+
+  console.log(`${diff.total} possible diff in compared sequences.`);
+}
+
+compare("RAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF", "TAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF")
+
+
+
 // Wuhan first genome
 // getSample("MN9089473", true).then((data) => {
-//   let orf1ab = translate(data.substr(266-1, 21555-(266-1)), false, "orf1ab");
-//   let spike_protein = translate(data.substr(21563-1, 25384-(21563-1)), false, "spike_protein");
-//   let orfa3 = translate(data.substr(25393-1, 26220-(25393-1)), false, "orf3a");
-//   let e_protein = translate(data.substr(26245-1, 26472-(26245-1)), false, "E");
-//   let m_protein = translate(data.substr(26523-1, 27191-(26523-1)), false, "M");
-//   let orf6 = translate(data.substr(27202-1, 27387-(27202-1)), false, "orf6");
-//   let orf7a = translate(data.substr(27894-1, 27759-(27894-1)), false, "orf7a");
-//   let orf8 = translate(data.substr(27894-1, 28259-(27894-1)), false, "orf8");
-//   let n = translate(data.substr(28274-1, 29533-(28274-1)), false, "N");
-//   let orf10 = translate(data.substr(29558-1, 29674-(29558-1)), false, "orf10");
+//   let orf1ab = translate(data, 266, 21555, false, "orf1ab");
+//   let spike_protein = translate(data, 21563, 25384, false, "spike_protein");
+//   let orfa3 = translate(data, 25393, 26220, false, "orf3a");
+//   let e_protein = translate(data, 26245, 26472, false, "E");
+//   let m_protein = translate(data, 26523, 27191, false, "M");
+//   let orf6 = translate(data, 27202, 27387, false, "orf6");
+//   let orf7a = translate(data, 27894, 27759, false, "orf7a");
+//   let orf8 = translate(data, 27894, 28259, false, "orf8");
+//   let n = translate(data, 28274, 29533, false, "N");
+//   let orf10 = translate(data, 29558, 29674, false, "orf10");
 // })
 
-// Partial ORF1ab nsp2 (Tunis - 3 April 2020)
-getSample("MT324683", true).then((data) => {
-  let orf1ab = translate(data, 1, 344, true, "orf1ab");
+// Complete Sars Cov 2 (NC - April 2020)
+// No mutation in NSP2
+getSample("MT308702", true).then((data) => {
+  let orf1ab = translate(data, 241, 21530, false, "orf1ab");
+  let nsp2 = translate(data, 781, 2694, false, "nsp2");
+  let spike_protein = translate(data, 21538, 25359, false, "spike_protein");
+  let orfa3 = translate(data, 25368, 26195, false, "orf3a");
+  let e_protein = translate(data, 26220, 26447, false, "E");
+  let m_protein = translate(data, 26498, 27166, false, "M");
+  let orf6 = translate(data, 27177, 27362, false, "orf6");
+  let orf7a = translate(data, 27369, 27734, false, "orf7a");
+  let orf8 = translate(data, 27869, 28234, false, "orf8");
+  let n = translate(data, 28249, 29508, false, "N");
+  let orf10 = translate(data, 29533, 29649, false, "orf10");
 })
+
+// // Partial ORF1ab nsp2 (Tunis - 3 April 2020)
+// Mutation of first amino NSP2 (T to R)
+// getSample("MT324683", true).then((data) => {
+//   let orf1ab = translate(data, 1, 344, true, "orf1ab");
+// })
 
 
