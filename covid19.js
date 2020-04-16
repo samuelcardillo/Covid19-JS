@@ -67,7 +67,7 @@ function translate(data, start, end, markStop, outputName) {
     for(var k in codonsTable) {
       if(codonsTable[k].includes(frame)) { 
         // If STOP and markStop is false then we don't mark the stop
-        // if(k === "X" && !markStop) continue;
+        if(k === "X" && !markStop) continue;
         translation += k; // We add the amino acid in the translation
       }
     }
@@ -105,7 +105,7 @@ function compare(genSeqOne, genSeqTwo) {
   console.log(`${diff.total} possible diff in compared sequences.`);
 }
 
-compare("RAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF", "TAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF")
+// compare("RAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF", "TAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF")
 
 
 
@@ -125,19 +125,19 @@ compare("RAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDE
 
 // Complete Sars Cov 2 (NC - April 2020)
 // No mutation in NSP2
-getSample("MT308702", true).then((data) => {
-  let orf1ab = translate(data, 241, 21530, false, "orf1ab");
-  let nsp2 = translate(data, 781, 2694, false, "nsp2");
-  let spike_protein = translate(data, 21538, 25359, false, "spike_protein");
-  let orfa3 = translate(data, 25368, 26195, false, "orf3a");
-  let e_protein = translate(data, 26220, 26447, false, "E");
-  let m_protein = translate(data, 26498, 27166, false, "M");
-  let orf6 = translate(data, 27177, 27362, false, "orf6");
-  let orf7a = translate(data, 27369, 27734, false, "orf7a");
-  let orf8 = translate(data, 27869, 28234, false, "orf8");
-  let n = translate(data, 28249, 29508, false, "N");
-  let orf10 = translate(data, 29533, 29649, false, "orf10");
-})
+// getSample("MT308702", true).then((data) => {
+//   let orf1ab = translate(data, 241, 21530, false, "orf1ab");
+//   let nsp2 = translate(data, 781, 2694, false, "nsp2");
+//   let spike_protein = translate(data, 21538, 25359, false, "spike_protein");
+//   let orfa3 = translate(data, 25368, 26195, false, "orf3a");
+//   let e_protein = translate(data, 26220, 26447, false, "E");
+//   let m_protein = translate(data, 26498, 27166, false, "M");
+//   let orf6 = translate(data, 27177, 27362, false, "orf6");
+//   let orf7a = translate(data, 27369, 27734, false, "orf7a");
+//   let orf8 = translate(data, 27869, 28234, false, "orf8");
+//   let n = translate(data, 28249, 29508, false, "N");
+//   let orf10 = translate(data, 29533, 29649, false, "orf10");
+// })
 
 // // Partial ORF1ab nsp2 (Tunis - 3 April 2020)
 // Mutation of first amino NSP2 (T to R)
