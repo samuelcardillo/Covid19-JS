@@ -105,8 +105,53 @@ function compare(genSeqOne, genSeqTwo) {
   console.log(`${diff.total} possible diff in compared sequences.`);
 }
 
+
+
+
 // compare("RAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF", "TAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF")
 
+let cheerio = require("cheerio");
+let request = require("request");
+request("https://www.ncbi.nlm.nih.gov/nuccore/MN908947", (err, res) => {
+  let uid = res.body.split("ordinalpos=1&amp;ncbi_uid=");
+  uid = uid[1].split('&')[0];
+  let link = `https://www.ncbi.nlm.nih.gov/sviewer/viewer.fcgi?id=${uid}&db=nuccore&report=genbank&conwithfeat=on&withparts=on&hide-cdd=on&retmode=html&withmarkup=on&tool=portal&log$=seqview&maxdownloadsize=1000000`
+  
+  console.debug("Fetching API url...")
+  request(link, (err, res) => {
+    let features = res.body.split(/(_CDS_)[0-9](" class="feature")/);
+    // let features = res.body.split("CDS\"")
+    console.dir(features.length)
+
+    // Start at 4 -- Everything else is useless overhead
+    // for(var i = 1; i < features.length; i++) { 
+    //   let genomeDetails = features[i];
+    //   let name = genomeDetails.split("/gene=\"")[1].split("\"")[0];
+    //   // let length = genomeDetails.split("join(")[1];
+    //   console.log(name)
+      
+    // }
+
+    
+
+
+    // console.dir(features[startPos]);
+  })
+
+
+
+
+  
+
+  // let response = res.body.split("class=\"feature\"");
+  // let features = [];
+
+  // fs.writeFile("debug.txt", response, 'utf8', (err) => {})
+  
+  // console.dir(response[0])
+  
+
+})
 
 
 // Wuhan first genome
@@ -144,5 +189,3 @@ function compare(genSeqOne, genSeqTwo) {
 // getSample("MT324683", true).then((data) => {
 //   let orf1ab = translate(data, 1, 344, true, "orf1ab");
 // })
-
-
