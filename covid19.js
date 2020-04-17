@@ -1,28 +1,12 @@
 /**
  * SARS-COV-2 - RevEng Project 
  * Samuel Lespes Cardillo
- * 
- * Rebuilt from scratch for GitHub publication
- * 
- * To Do : 
- * - Comparison between different GenSeq.
- * - Graphic interface for data viz.
- * - More understandable map for understanding mutations.
  */
 
 const fs = require("fs")
   ,   util = require("util")
   ,   zlib = require("zlib")
   ,   request = require("request");
-
-let codonsTable = "";
-let geneticSeqName = "";
-
-// We load up the codon table
-fs.readFile('./codontable.json', (err, data) => {
-  codonsTable = JSON.parse(data);
-})
-
 
 // Allows to encode the genome in order to obtain size in Kilobytes
 async function encodeGenome(data) { 
@@ -33,29 +17,32 @@ async function encodeGenome(data) {
   })
 }
 
+// Translate RNA to AA
 function translate(data, start, end, markStop, genomeName, proteinName) { 
   let translation = "";
-  markStop = markStop || false;
-  data = data.substr(start-1, end-(start-1));
 
-  for(var i = 0; i < data.length; i = i + 3) {
-    let frame = (data[i] + data[i+1] + data[i+2]).toUpperCase();
+  fs.readFile('./codontable.json', (err, unparsedCodonsTable) => {
+    codonsTable = JSON.parse(unparsedCodonsTable);
+    markStop = markStop || false;
+    data = data.substr(start-1, end-(start-1));
 
-    for(var k in codonsTable) {
-      if(codonsTable[k].includes(frame)) { 
-        // If STOP and markStop is false then we don't mark the stop
-        if(k === "X" && !markStop) continue;
-        translation += k; // We add the amino acid in the translation
+    for(var i = 0; i < data.length; i = i + 3) {
+      let frame = (data[i] + data[i+1] + data[i+2]).toUpperCase();
+
+      for(var k in codonsTable) {
+        if(codonsTable[k].includes(frame)) { 
+          // If STOP and markStop is false then we don't mark the stop
+          if(k === "X" && !markStop) continue;
+          translation += k; // We add the amino acid in the translation
+        }
       }
     }
-  }
 
-  // If outputName is given then we save the output in a file with corresponding name
-  fs.writeFile(`./exports/${genomeName}/${proteinName}.txt`, translation, (err) => {
-    if(err) console.log(err);
+    // If outputName is given then we save the output in a file with corresponding name
+    fs.writeFile(`./exports/${genomeName}/${proteinName}.txt`, translation, (err) => {
+      if(err) console.log(err);
+    })
   })
-
-  return translation;
 }
 
 
