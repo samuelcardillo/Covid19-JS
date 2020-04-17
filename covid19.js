@@ -135,7 +135,7 @@ function generateReport(name) {
 
 /////// USAGE -- Temporary
 
-let name = "MN908947";
+let name = "MT300186";
 downloadGenome(name).then(() => {
   generateReport(name);
 })

@@ -1,107 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COVID19.js - Genomes Comparison Tool (GCT)</title>
-    <style>
-        html, body {
-            margin: 0;
-        }
-        
-        canvas {
-            width: 400px;
-        }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>COVID19.js - Genomes Comparison Tool (GCT)</title>
+	<style>
+		html,
+		body {
+			margin: 0;
+		}
+
+		canvas {
+			width: 400px;
+		}
+	</style>
+	<script src="patienceDiff.js"></script>
 </head>
+
 <body>
-    <input name="fileOne" type="file" onChange="javascript:readGenFile();">
-    <input name="fileTwo" type="file" onChange="javascript:readGenFile();">
-    <button onClick="javascript:compareGenomes();" disabled>Compare</button>
-    <hr/>
+	<input name="fileOne" type="file" onChange="javascript:readGenFile();">
+	<input name="fileTwo" type="file" onChange="javascript:readGenFile();">
+	<button onClick="javascript:compareGenomes();" disabled>Compare</button>
+	<hr />
 
+	<div class="infos"></div>
+	<hr />
 
-    <div class="details"></div>
+	<div class="details"></div>
 
-    <script>
-      let genomes = [];
+	<!-- <textarea name="fileOne"></textarea>
+	<textarea name="fileTwo"></textarea>
+	<textarea name="difference"></textarea> -->
 
-      function readGenFile() {
-        let fileOne = document.querySelector("input[name=fileOne]").files[0];
-        let fileTwo = document.querySelector("input[name=fileTwo]").files[0];
+	<script>
+		let genomes = [];
 
-        if((fileOne || fileTwo) === undefined) return console.log("Not yet.");
+		function readGenFile() {
+			let fileReader = new FileReader();
+			let fileOne = document.querySelector("input[name=fileOne]").files[0];
+			let fileTwo = document.querySelector("input[name=fileTwo]").files[0];
 
-        document.querySelector("button").disabled = false;
-        
+			// We expect two files to be chosen
+			if (fileOne === undefined || fileTwo === undefined) return;
 
+			fileReader.readAsText(fileOne, "UTF-8");
+			fileReader.onload = function (evt) {
+				// We load the first file
+				genomes[0] = JSON.parse(evt.target.result);
 
-        // let file = document.querySelector("input").files[0];
-        // let reader = new FileReader();
+				fileReader.readAsText(fileTwo, "UTF-8");
+				fileReader.onload = function (evt) {
+					genomes[1] = JSON.parse(evt.target.result);
 
-        // if(!file) return;
-        // reader.readAsText(file, "UTF-8");
-        // reader.onload = function (evt) {
-        //   genome = JSON.parse(evt.target.result);
+					loadInfos();
+					document.querySelector("button").disabled = false;
+				}
 
-        // }
-        // reader.onerror = function (evt) {
-        //   alert("Error reading file.");
-        // }
-      }
+			}
+			fileReader.onerror = function (evt) {
+				alert("Error reading file.");
+			}
+		}
 
-        function loadGenome() {
-          let canvas = document.querySelector("canvas");
-          let ctx = canvas.getContext("2d");
-          
-          // Clear everything
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          document.querySelector("div.details").innerHTML = "";
+		function loadInfos() {
+			let infos = document.querySelector("div.infos");
 
-          // Drawing the proteins
-          let width = window.innerWidth;
-          let yPos = 12;
-          let colors = ["black", "red", "blue", "olive", "grey", "darkblue", "purple", "navy", "teal", "DarkKhaki", "OliveDrab", "DarkSlateGray"]
-          for(var i = 0; i < genome.proteins.length; i++) {
-              yPos = yPos + 12;
+			infos.innerHTML = "";
 
-              ctx.fillStyle = colors[i];
-              ctx.font = "12px Arial";
+			let seqOneInfos = document.createElement("p");
+			seqOneInfos.innerHTML = `Seq1. ${genomes[0].infos.date} - ${genomes[0].infos.isolate} / ${genomes[0].infos.country} / ${genomes[0].infos.host}`;
+			let seqTwoInfos = document.createElement("p");
+			seqTwoInfos.innerHTML = `Seq2. ${genomes[1].infos.date} - ${genomes[1].infos.isolate} / ${genomes[1].infos.country} / ${genomes[1].infos.host}`;
 
-              let startSeq = (genome.proteins[i]["start"]*10)/width;
-              let endSeq = ((genome.proteins[i]["end"]-genome.proteins[i]["start"])*10)/width;
+			infos.append(seqOneInfos);
+			infos.append(seqTwoInfos);
+		}
 
-              ctx.fillText(genome.proteins[i]["name"], startSeq, yPos);
-              // ctx.fillStyle = "black";
-              ctx.fillRect(startSeq, yPos, endSeq, 8)   
-          }
+		function compareGenomes() {
 
-          // Adding details of the proteins
-          for(var i = 0; i < genome.proteins.length; i++) {
-              // We set the variables 
-              let name = genome.proteins[i]["name"];
-              let color = colors[i];
-              let sequence = genome.code.substr(genome.proteins[i]["start"]-1,genome.proteins[i]["end"]-(genome.proteins[i]["start"]-1));
+			// Cleaning
+			document.querySelector("div.details").innerHTML = "";
 
-              // We create the HTML elements
-              let div = document.createElement("div");
-              div.className = "genome";
-              let elementName = document.createElement("p");
-              elementName.innerHTML = `${name} (Length : ${sequence.length})`;
-              elementName.style.color = color;
-              let elementNewline = document.createElement("br");
-              let elementSequence = document.createElement("p");
-              elementSequence.innerHTML = sequence;
-              let elementSeparation = document.createElement("hr");
+			let colors = ["black", "red", "blue", "olive", "grey", "darkblue", "purple", "navy", "teal", "DarkKhaki", "OliveDrab", "DarkSlateGray"];
+			// Adding details of the proteins
+			for (var i = 0; i < genomes[0].proteins.length; i++) {
 
-              div.append(elementName);
-              div.append(elementNewline);
-              div.append(elementSequence);
-              div.append(elementSeparation);
+				if(genomes[0].proteins[i] === undefined || genomes[1].proteins[i] === undefined) continue;
 
-              document.querySelector("div.details").append(div);
-          }
-        }
-    </script>
+				// We set the variables 
+				let name = genomes[0].proteins[i]["name"];
+				let color = colors[i];
+				let sequences = [
+					genomes[0].code.substr(genomes[0].proteins[i]["start"] - 1, genomes[0].proteins[i]["end"] - (genomes[0].proteins[i]["start"] - 1)),
+					genomes[1].code.substr(genomes[1].proteins[i]["start"] - 1, genomes[1].proteins[i]["end"] - (genomes[1].proteins[i]["start"] - 1))
+				]
+
+				let isDifferent = (sequences[0] === sequences[1]) ? "False" : "True";
+
+				// We create the HTML elements
+				let div = document.createElement("div");
+				div.className = "genome";
+				let elementName = document.createElement("p");
+				elementName.innerHTML = `${name} (Length : ${sequences[0].length} - ${sequences[1].length}) - Different : ${isDifferent}`;
+				elementName.style.color = color;
+				let elementNewline = document.createElement("br");
+				let elementSequence = document.createElement("p");
+				elementSequence.innerHTML = `Seq1. ${sequences[0]}`;
+				let elementSequenceOne = document.createElement("p");
+				elementSequenceOne.innerHTML = `Seq2. ${sequences[1]}`;
+				let elementSeparation = document.createElement("hr");
+
+				div.append(elementName);
+				div.append(elementNewline);
+				div.append(elementSequence);
+				div.append(elementSequenceOne);
+				div.append(elementSeparation);
+
+				document.querySelector("div.details").append(div);
+			}
+
+		}
+	</script>
 </body>
+
 </html>
