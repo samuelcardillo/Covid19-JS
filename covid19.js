@@ -13,6 +13,7 @@
 const fs = require("fs")
   ,   util = require("util")
   ,   zlib = require("zlib")
+  ,   request = require("request");
 
 let codonsTable = "";
 let geneticSeqName = "";
@@ -22,28 +23,6 @@ fs.readFile('./codontable.json', (err, data) => {
   codonsTable = JSON.parse(data);
 })
 
-// We take the sample from the GenBank
-function getSample(sampleName, outputRna) {
-  outputRna = outputRna || false;
-  geneticSeqName = sampleName;
-
-  return new Promise((resolve, reject) => {
-    let covidSample = require("fs").readFile(`./${sampleName}.txt`, (err, data) => {
-      let string = new Buffer.alloc(data.length, data).toString();
-      string = string.replace(/[\s\d]+/gm, '');
-
-      fs.mkdir(`./exports/${geneticSeqName}`, (err) => { 
-      })
-
-      // If outputRna is given then we
-      if(outputRna) { 
-        fs.writeFile(`./exports/${geneticSeqName}/${geneticSeqName}.txt`, string, (err) => {})      
-      }
-
-      return resolve(string);
-    })
-  })
-}
 
 // Allows to encode the genome in order to obtain size in Kilobytes
 async function encodeGenome(data) { 
@@ -54,12 +33,10 @@ async function encodeGenome(data) {
   })
 }
 
-function translate(data, start, end, markStop, outputName) { 
+function translate(data, start, end, markStop, genomeName, proteinName) { 
   let translation = "";
-  outputName = outputName || false;
   markStop = markStop || false;
   data = data.substr(start-1, end-(start-1));
-
 
   for(var i = 0; i < data.length; i = i + 3) {
     let frame = (data[i] + data[i+1] + data[i+2]).toUpperCase();
@@ -74,12 +51,9 @@ function translate(data, start, end, markStop, outputName) {
   }
 
   // If outputName is given then we save the output in a file with corresponding name
-  if(outputName) { 
-    fs.writeFile(`./exports/${geneticSeqName}/${outputName}.txt`, translation, (err) => {
-      if(err) console.log(err);
-    })
-  }
-  
+  fs.writeFile(`./exports/${genomeName}/${proteinName}.txt`, translation, (err) => {
+    if(err) console.log(err);
+  })
 
   return translation;
 }
@@ -105,81 +79,58 @@ function compare(genSeqOne, genSeqTwo) {
   console.log(`${diff.total} possible diff in compared sequences.`);
 }
 
+// downloadGenome("MN938384");
+generateReport("MN938384");
 
+// Download a genome from the NCBI GenBank
+function downloadGenome(name) {
+  request(`https://www.ncbi.nlm.nih.gov/nuccore/${name}`, async (err, res) => {
+    let uid = res.body.split("ordinalpos=1&amp;ncbi_uid=");
+    uid = uid[1].split('&')[0];
+    let link = `https://www.ncbi.nlm.nih.gov/sviewer/viewer.fcgi?id=${uid}&db=nuccore&report=genbank&conwithfeat=on&withparts=on&hide-cdd=on&retmode=html&withmarkup=on&tool=portal&log$=seqview&maxdownloadsize=1000000`
+    
+    await request(link, async (err, res) => {
+      let features = res.body.split(/(?:_CDS_[0-9]" class="feature">)/);
+      let fullSequence = [];
+      let fullGenome = {
+        proteins: [],
+        code: null
+      }
 
+      // Start at 1 -- 0 is overhead
+      for(var i = 1; i < features.length; i++) {
+        let name = features[i].split("/gene=\"")[1].split("\"")[0];
+        let sequence = JSON.parse(`[${features[i].split("features[\"CDS\"].push([")[1].split("]);")[0]}]`);
+        let start = sequence[0][0];
+        let end = (sequence.length > 1) ? sequence[1][1] : sequence[0][1];
 
-// compare("RAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF", "TAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF")
+        fullGenome.proteins.push({
+          name: name,
+          start: start,
+          end: end
+        })
+      }
 
-let request = require("request");
-request("https://www.ncbi.nlm.nih.gov/nuccore/MT044257", (err, res) => {
-  let uid = res.body.split("ordinalpos=1&amp;ncbi_uid=");
-  uid = uid[1].split('&')[0];
-  let link = `https://www.ncbi.nlm.nih.gov/sviewer/viewer.fcgi?id=${uid}&db=nuccore&report=genbank&conwithfeat=on&withparts=on&hide-cdd=on&retmode=html&withmarkup=on&tool=portal&log$=seqview&maxdownloadsize=1000000`
-  
-  console.debug("Fetching API url...")
-  request(link, (err, res) => {
-    let features = res.body.split(/(?:_CDS_[0-9]" class="feature">)/);
-    features[features.length-1] = features[features.length-1].split("<span class=\"ff_line")[0];
+      let unparsedSequences = res.body.split(/(?:<span class="ff_line" id="[A-Z]{1,}[0-9]{1,20}(?:.)[0-9]{1,10}(?:_)[0-9]{1,10}">)/);
+      for(var i2 = 1; i2 < unparsedSequences.length; i2++) { 
+        fullSequence.push(unparsedSequences[i2].split("</span>")[0]);
+      }
+      fullGenome.code = fullSequence.join('').split(' ').join('');
 
-    // Start at 1 -- 0 is overhead
-    for(var i = 1; i < features.length; i++) {
-      let name = features[i].split("/gene=\"")[1].split("\"")[0];
-      let sequence = JSON.parse(`[${features[i].split("features[\"CDS\"].push([")[1].split("]);")[0]}]`);
-      let start = sequence[0][0];
-      let end = (sequence.length > 1) ? sequence[1][1] : sequence[0][1];
+      fs.writeFile(`./${name}.json`, JSON.stringify(fullGenome), (err) => {})
+    })
+  })
+}
 
-      console.log(name);
+// Generate a report of the genome
+function generateReport(name) { 
+  fs.readFile(`./${name}.json`, (err, json) => {
+    json = JSON.parse(json);
+
+    fs.mkdir(`./exports/${name}`, (err) => { })    
+
+    for(var k in json.proteins) {
+      translate(json.code, json.proteins[k].start, json.proteins[k].end, false, name, json.proteins[k].name);
     }
   })
-
-
-
-
-  
-
-  // let response = res.body.split("class=\"feature\"");
-  // let features = [];
-
-  // fs.writeFile("debug.txt", response, 'utf8', (err) => {})
-  
-  // console.dir(response[0])
-  
-
-})
-
-
-// Wuhan first genome
-// getSample("MN9089473", true).then((data) => {
-//   let orf1ab = translate(data, 266, 21555, false, "orf1ab");
-//   let spike_protein = translate(data, 21563, 25384, false, "spike_protein");
-//   let orfa3 = translate(data, 25393, 26220, false, "orf3a");
-//   let e_protein = translate(data, 26245, 26472, false, "E");
-//   let m_protein = translate(data, 26523, 27191, false, "M");
-//   let orf6 = translate(data, 27202, 27387, false, "orf6");
-//   let orf7a = translate(data, 27894, 27759, false, "orf7a");
-//   let orf8 = translate(data, 27894, 28259, false, "orf8");
-//   let n = translate(data, 28274, 29533, false, "N");
-//   let orf10 = translate(data, 29558, 29674, false, "orf10");
-// })
-
-// Complete Sars Cov 2 (NC - April 2020)
-// No mutation in NSP2
-// getSample("MT308702", true).then((data) => {
-//   let orf1ab = translate(data, 241, 21530, false, "orf1ab");
-//   let nsp2 = translate(data, 781, 2694, false, "nsp2");
-//   let spike_protein = translate(data, 21538, 25359, false, "spike_protein");
-//   let orfa3 = translate(data, 25368, 26195, false, "orf3a");
-//   let e_protein = translate(data, 26220, 26447, false, "E");
-//   let m_protein = translate(data, 26498, 27166, false, "M");
-//   let orf6 = translate(data, 27177, 27362, false, "orf6");
-//   let orf7a = translate(data, 27369, 27734, false, "orf7a");
-//   let orf8 = translate(data, 27869, 28234, false, "orf8");
-//   let n = translate(data, 28249, 29508, false, "N");
-//   let orf10 = translate(data, 29533, 29649, false, "orf10");
-// })
-
-// // Partial ORF1ab nsp2 (Tunis - 3 April 2020)
-// Mutation of first amino NSP2 (T to R)
-// getSample("MT324683", true).then((data) => {
-//   let orf1ab = translate(data, 1, 344, true, "orf1ab");
-// })
+}
