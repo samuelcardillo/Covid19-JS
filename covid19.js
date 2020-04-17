@@ -45,27 +45,6 @@ function translate(data, start, end, markStop, genomeName, proteinName) {
   })
 }
 
-
-function compare(genSeqOne, genSeqTwo) {
-  let genSeqOneLength = genSeqOne.length;
-  let genSeqTwoLength = genSeqTwo.length;
-  let diff = {
-    total: 0,
-    mismatch: []
-  }
-
-  if(genSeqOneLength !== genSeqTwoLength) return console.log("Length mismatch.");
-
-  for(var i = 0; i < genSeqOneLength; i++) {
-    if(genSeqOne[i] !== genSeqTwo[i]) {
-      diff.total++;
-      diff.mismatch.push({position: i, seqOne: genSeqOne[i], seqTwo: genSeqTwo[i]})
-    }
-  }
-
-  console.log(`${diff.total} possible diff in compared sequences.`);
-}
-
 // Download a genome from the NCBI GenBank
 function downloadGenome(name) {
   return new Promise((resolve, reject) => {
