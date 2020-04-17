@@ -110,32 +110,26 @@ function compare(genSeqOne, genSeqTwo) {
 
 // compare("RAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF", "TAPHGHVMVELVAELEGIQYGRSGETLGVLVPHVGEIPVAYRKVLLRKNGNKGAGGHSYGADLKSFDLGDELGTDPYEDFQENWNTKHSSGVTRELMRELNGGAYTRYVDNNF")
 
-let cheerio = require("cheerio");
 let request = require("request");
-request("https://www.ncbi.nlm.nih.gov/nuccore/MN908947", (err, res) => {
+request("https://www.ncbi.nlm.nih.gov/nuccore/MT044257", (err, res) => {
   let uid = res.body.split("ordinalpos=1&amp;ncbi_uid=");
   uid = uid[1].split('&')[0];
   let link = `https://www.ncbi.nlm.nih.gov/sviewer/viewer.fcgi?id=${uid}&db=nuccore&report=genbank&conwithfeat=on&withparts=on&hide-cdd=on&retmode=html&withmarkup=on&tool=portal&log$=seqview&maxdownloadsize=1000000`
   
   console.debug("Fetching API url...")
   request(link, (err, res) => {
-    let features = res.body.split(/(_CDS_)[0-9](" class="feature")/);
-    // let features = res.body.split("CDS\"")
-    console.dir(features.length)
+    let features = res.body.split(/(?:_CDS_[0-9]" class="feature">)/);
+    features[features.length-1] = features[features.length-1].split("<span class=\"ff_line")[0];
 
-    // Start at 4 -- Everything else is useless overhead
-    // for(var i = 1; i < features.length; i++) { 
-    //   let genomeDetails = features[i];
-    //   let name = genomeDetails.split("/gene=\"")[1].split("\"")[0];
-    //   // let length = genomeDetails.split("join(")[1];
-    //   console.log(name)
-      
-    // }
+    // Start at 1 -- 0 is overhead
+    for(var i = 1; i < features.length; i++) {
+      let name = features[i].split("/gene=\"")[1].split("\"")[0];
+      let sequence = JSON.parse(`[${features[i].split("features[\"CDS\"].push([")[1].split("]);")[0]}]`);
+      let start = sequence[0][0];
+      let end = (sequence.length > 1) ? sequence[1][1] : sequence[0][1];
 
-    
-
-
-    // console.dir(features[startPos]);
+      console.log(name);
+    }
   })
 
 
