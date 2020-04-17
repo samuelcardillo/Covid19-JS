@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COVID19.js - Genomes Comparison Tool (GCT)</title>
+    <style>
+        html, body {
+            margin: 0;
+        }
+        
+        canvas {
+            width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <input name="fileOne" type="file" onChange="javascript:readGenFile();">
+    <input name="fileTwo" type="file" onChange="javascript:readGenFile();">
+    <button onClick="javascript:compareGenomes();" disabled>Compare</button>
+    <hr/>
+
+
+    <div class="details"></div>
+
+    <script>
+      let genomes = [];
+
+      function readGenFile() {
+        let fileOne = document.querySelector("input[name=fileOne]").files[0];
+        let fileTwo = document.querySelector("input[name=fileTwo]").files[0];
+
+        if((fileOne || fileTwo) === undefined) return console.log("Not yet.");
+
+        document.querySelector("button").disabled = false;
+        
+
+
+        // let file = document.querySelector("input").files[0];
+        // let reader = new FileReader();
+
+        // if(!file) return;
+        // reader.readAsText(file, "UTF-8");
+        // reader.onload = function (evt) {
+        //   genome = JSON.parse(evt.target.result);
+
+        // }
+        // reader.onerror = function (evt) {
+        //   alert("Error reading file.");
+        // }
+      }
+
+        function loadGenome() {
+          let canvas = document.querySelector("canvas");
+          let ctx = canvas.getContext("2d");
+          
+          // Clear everything
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          document.querySelector("div.details").innerHTML = "";
+
+          // Drawing the proteins
+          let width = window.innerWidth;
+          let yPos = 12;
+          let colors = ["black", "red", "blue", "olive", "grey", "darkblue", "purple", "navy", "teal", "DarkKhaki", "OliveDrab", "DarkSlateGray"]
+          for(var i = 0; i < genome.proteins.length; i++) {
+              yPos = yPos + 12;
+
+              ctx.fillStyle = colors[i];
+              ctx.font = "12px Arial";
+
+              let startSeq = (genome.proteins[i]["start"]*10)/width;
+              let endSeq = ((genome.proteins[i]["end"]-genome.proteins[i]["start"])*10)/width;
+
+              ctx.fillText(genome.proteins[i]["name"], startSeq, yPos);
+              // ctx.fillStyle = "black";
+              ctx.fillRect(startSeq, yPos, endSeq, 8)   
+          }
+
+          // Adding details of the proteins
+          for(var i = 0; i < genome.proteins.length; i++) {
+              // We set the variables 
+              let name = genome.proteins[i]["name"];
+              let color = colors[i];
+              let sequence = genome.code.substr(genome.proteins[i]["start"]-1,genome.proteins[i]["end"]-(genome.proteins[i]["start"]-1));
+
+              // We create the HTML elements
+              let div = document.createElement("div");
+              div.className = "genome";
+              let elementName = document.createElement("p");
+              elementName.innerHTML = `${name} (Length : ${sequence.length})`;
+              elementName.style.color = color;
+              let elementNewline = document.createElement("br");
+              let elementSequence = document.createElement("p");
+              elementSequence.innerHTML = sequence;
+              let elementSeparation = document.createElement("hr");
+
+              div.append(elementName);
+              div.append(elementNewline);
+              div.append(elementSequence);
+              div.append(elementSeparation);
+
+              document.querySelector("div.details").append(div);
+          }
+        }
+    </script>
+</body>
+</html>
