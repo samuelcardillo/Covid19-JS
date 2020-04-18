@@ -8,6 +8,19 @@ const fs = require("fs")
   ,   zlib = require("zlib")
   ,   request = require("request");
 
+const arguments = process.argv.slice(2);
+
+if(arguments.length > 0) {
+  let name = arguments[0]; 
+  downloadGenome(name).then(() => {
+    generateReport(name);
+  })
+}
+
+
+
+//////////////////////////////////////////////////////////////////////
+
 // Allows to encode the genome in order to obtain size in Kilobytes
 async function encodeGenome(data) { 
   let encoder = new util.TextEncoder;
@@ -89,7 +102,7 @@ function downloadGenome(name) {
         }
         fullGenome.code = fullSequence.join('').split(' ').join('');
 
-        fs.writeFile(`./${name}.json`, JSON.stringify(fullGenome), (err) => {
+        fs.writeFile(`./genomes/${name}.json`, JSON.stringify(fullGenome), (err) => {
           if(err) return reject();
           return resolve();
         })
@@ -100,7 +113,7 @@ function downloadGenome(name) {
 
 // Generate a report of the genome
 function generateReport(name) { 
-  fs.readFile(`./${name}.json`, (err, json) => {
+  fs.readFile(`./genomes/${name}.json`, (err, json) => {
     json = JSON.parse(json);
 
     fs.mkdir(`./exports/${name}`, (err) => { })    
@@ -110,11 +123,3 @@ function generateReport(name) {
     }
   })
 }
-
-
-/////// USAGE -- Temporary
-
-let name = "MT300186";
-downloadGenome(name).then(() => {
-  generateReport(name);
-})
