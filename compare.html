@@ -23,7 +23,7 @@
 	<button onClick="javascript:compareGenomes();" disabled>Compare</button>
 	<hr />
 
-	<div class="infos"></div>
+  <div class="infos"></div>
 	<hr />
 
 	<div class="details"></div>
@@ -65,59 +65,109 @@
 		function loadInfos() {
 			let infos = document.querySelector("div.infos");
 
-			infos.innerHTML = "";
-
+      // Cleaning
+      infos.innerHTML = "";
+			document.querySelector("div.details").innerHTML = "";
+      
+      // Creating the elements
 			let seqOneInfos = document.createElement("p");
 			seqOneInfos.innerHTML = `Seq1. ${genomes[0].infos.date} - ${genomes[0].infos.isolate} / ${genomes[0].infos.country} / ${genomes[0].infos.host}`;
 			let seqTwoInfos = document.createElement("p");
 			seqTwoInfos.innerHTML = `Seq2. ${genomes[1].infos.date} - ${genomes[1].infos.isolate} / ${genomes[1].infos.country} / ${genomes[1].infos.host}`;
+      let missingProteinsInfos = document.createElement("p");
+      missingProteinsInfos.style.color = "green";
+      missingProteinsInfos.className = "missingProteins";
 
 			infos.append(seqOneInfos);
 			infos.append(seqTwoInfos);
+			infos.append(missingProteinsInfos);
 		}
 
 		function compareGenomes() {
+			let colors = ["black", "red", "blue", "olive", "grey", "darkblue", "purple", "navy", "teal", "DarkKhaki", "OliveDrab", "DarkSlateGray"];
+      let proteins = [{},{}]
+      let missingProteins = [];
 
 			// Cleaning
 			document.querySelector("div.details").innerHTML = "";
 
-			let colors = ["black", "red", "blue", "olive", "grey", "darkblue", "purple", "navy", "teal", "DarkKhaki", "OliveDrab", "DarkSlateGray"];
-			// Adding details of the proteins
-			for (var i = 0; i < genomes[0].proteins.length; i++) {
 
-				if(genomes[0].proteins[i] === undefined || genomes[1].proteins[i] === undefined) continue;
+      // We redefine the array so we can match the proteins for comparisons
+      for(var k in genomes[0].proteins) { 
+        proteins[0][genomes[0].proteins[k].name] = genomes[0].proteins[k];
+      }
+      for(var k2 in genomes[1].proteins) { 
+        proteins[1][genomes[1].proteins[k2].name] = genomes[1].proteins[k2];        
+      }
+
+			for (var i = 1; i < Object.keys(proteins[0]).length; i++) {
+        let keys = Object.keys(proteins[0]);
+
+        // When missing protein
+        if(proteins[1][keys[i]] === undefined) {
+          missingProteins.push(keys[i]);
+          let names = '';
+
+          for(var i2 in missingProteins) { 
+            names += `${missingProteins[i2]};`;
+          }
+
+          document.querySelector(".missingProteins").innerHTML = `- ${missingProteins.length} missing proteins between Seqs (${names}) -`
+          continue;
+        };
+
+        let sequences = [
+					genomes[0].code.substr(proteins[0][keys[i]]["start"] - 1, proteins[0][keys[i]]["end"] - (proteins[0][keys[i]]["start"] - 1)),
+					genomes[1].code.substr(proteins[1][keys[i]]["start"] - 1, proteins[1][keys[i]]["end"] - (proteins[1][keys[i]]["start"] - 1))
+				]
 
 				// We set the variables 
 				let name = genomes[0].proteins[i]["name"];
 				let color = colors[i];
-				let sequences = [
-					genomes[0].code.substr(genomes[0].proteins[i]["start"] - 1, genomes[0].proteins[i]["end"] - (genomes[0].proteins[i]["start"] - 1)),
-					genomes[1].code.substr(genomes[1].proteins[i]["start"] - 1, genomes[1].proteins[i]["end"] - (genomes[1].proteins[i]["start"] - 1))
-				]
-
-				let isDifferent = (sequences[0] === sequences[1]) ? "False" : "True";
+        let isDifferent = (sequences[0] === sequences[1]) ? false : true;
 
 				// We create the HTML elements
 				let div = document.createElement("div");
 				div.className = "genome";
 				let elementName = document.createElement("p");
-				elementName.innerHTML = `${name} (Length : ${sequences[0].length} - ${sequences[1].length}) - Different : ${isDifferent}`;
+				elementName.innerHTML = `${name} (Length : ${sequences[0].length} - ${sequences[1].length}) - Different : ${(isDifferent) ? "Yes" : "No"}`;
 				elementName.style.color = color;
 				let elementNewline = document.createElement("br");
 				let elementSequence = document.createElement("p");
 				elementSequence.innerHTML = `Seq1. ${sequences[0]}`;
 				let elementSequenceOne = document.createElement("p");
-				elementSequenceOne.innerHTML = `Seq2. ${sequences[1]}`;
-				let elementSeparation = document.createElement("hr");
+        elementSequenceOne.innerHTML = `Seq2. ${sequences[1]}`;
+        let elementDifferences = document.createElement("p");
+        let elementSeparation = document.createElement("hr");
+        
+        // In case of difference we list them
+        if(isDifferent) { 
+          let diff = findDiff(sequences[0],sequences[1]);
+          let differences = "Diff: ";
+          for(var i2 = 0; i2 < diff.length; i2++) { 
+            differences += `${diff[i2].val} (${diff[i2].pos}) | `;
+          }
+          elementDifferences.innerHTML = differences;
+        }
 
 				div.append(elementName);
 				div.append(elementNewline);
 				div.append(elementSequence);
 				div.append(elementSequenceOne);
+				div.append(elementDifferences);
 				div.append(elementSeparation);
 
 				document.querySelector("div.details").append(div);
-			}
+      }
+ 
+      // Find difference between two strings
+      function findDiff(str1, str2){ 
+        let diff = [];
+        str2.split('').forEach(function(val, i) {
+          if (val != str1.charAt(i)) diff.push({val: val, pos: i});       
+        });
+        return diff;
+      }
 
 		}
 	</script>
