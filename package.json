@@ -1,0 +1,28 @@
+{
+  "name": "covid19-js",
+  "version": "1.0.0",
+  "description": "Download SarsCov2 genomes from the GenBank and compare easily",
+  "main": "covid19.js",
+  "dependencies": {
+    "request": "^2.88.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samuelcardillo/Covid19-JS.git"
+  },
+  "keywords": [
+    "sarscov2",
+    "coronavirus",
+    "covid19"
+  ],
+  "author": "Samuel LESPES CARDILLO",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/samuelcardillo/Covid19-JS/issues"
+  },
+  "homepage": "https://github.com/samuelcardillo/Covid19-JS#readme"
+}
